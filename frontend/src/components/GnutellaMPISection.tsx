@@ -8,7 +8,6 @@ import {
   Download,
   BarChart3,
   Layers,
-  Activity,
   RefreshCw,
   ExternalLink,
   Zap,
@@ -24,7 +23,7 @@ export const GnutellaMPISection: React.FC = () => {
   const [expResult, setExpResult] = useState<any | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Form states
+  // Form parameters
   const [subgraphSize, setSubgraphSize] = useState<number>(10);
   const [numRanks, setNumRanks] = useState<number>(2);
   const [seed, setSeed] = useState<number>(42);
@@ -66,7 +65,6 @@ export const GnutellaMPISection: React.FC = () => {
 
       const res = await api.runMPIExperiment(subgraphSize, numRanks, seed, failedNodes);
       setExpResult(res);
-      // Refresh metrics after run
       const mData = await api.getMetrics();
       setMetrics(mData.metrics || []);
     } catch (err: any) {
@@ -77,136 +75,130 @@ export const GnutellaMPISection: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 mt-4">
-      {/* Top Banner / Dataset Overview */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/30 p-6 sm:p-8 shadow-2xl">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
-                <Database size={13} />
-                Stanford SNAP Dataset
+    <div className="space-y-5">
+      {/* Dataset Overview Header Strip */}
+      <div className="rounded border border-border bg-surface p-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-control text-accent text-[11px] font-mono">
+                <Database size={12} />
+                Stanford SNAP p2p-Gnutella08
               </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/40">
-                <Cpu size={13} />
-                MPI Topology-Aware Engine
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                <Activity size={13} />
-                MPI.THREAD_FUNNELED Watchdog
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-control text-positive text-[11px] font-mono">
+                <Cpu size={12} />
+                MPI Topology Engine
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              Distributed Leader Election over Gnutella P2P Network
+            <h2 className="text-lg font-semibold tracking-tight text-text">
+              Stanford SNAP Gnutella & Distributed MPI Engine
             </h2>
-            <p className="text-sm text-slate-300 max-w-3xl leading-relaxed">
-              Programmatically parsed from the Stanford SNAP Gnutella-08 Peer-to-Peer network. Subgraphs are mapped
-              across isolated MPI processes with threaded non-blocking heartbeat monitoring, bounded by graph diameter &Delta;.
+            <p className="text-xs text-muted max-w-3xl">
+              Leader election executed on subgraphs extracted from the official Stanford SNAP peer-to-peer dataset. Ranks maintain isolated states and exchange bounded diameter candidate proposals.
             </p>
           </div>
 
-          {/* Dataset citation external link */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex items-center gap-2 shrink-0">
             <a
               href="https://snap.stanford.edu/data/p2p-Gnutella08.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-200 font-medium border border-slate-700 transition-all text-sm shadow-md"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-control hover:bg-raised text-text border border-border text-xs font-medium transition-colors"
             >
-              <ExternalLink size={15} />
-              Stanford SNAP Citation
+              <ExternalLink size={13} />
+              <span>SNAP Dataset Citation</span>
             </a>
+            <button
+              onClick={fetchDatasetAndMetrics}
+              disabled={loadingInfo}
+              className="p-1.5 rounded bg-control hover:bg-raised text-muted hover:text-text border border-border transition-colors"
+              title="Refresh dataset metadata"
+            >
+              <RefreshCw size={13} className={loadingInfo ? 'animate-spin' : ''} />
+            </button>
           </div>
         </div>
 
-        {/* Dataset Stats Cards */}
+        {/* Dataset Stats Row */}
         {datasetInfo && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-6 border-t border-slate-800/80">
-            <div className="bg-slate-900/60 backdrop-blur rounded-xl p-3 border border-slate-800">
-              <span className="text-xs text-slate-400">Total Network Hosts</span>
-              <p className="text-lg font-bold text-white mt-0.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 mt-4 pt-4 border-t border-rule text-xs">
+            <div className="bg-raised p-2.5 rounded border border-border">
+              <span className="text-muted block text-[10px]">Total Network Hosts</span>
+              <p className="text-base font-semibold text-text mt-0.5 tabular-nums">
                 {datasetInfo.published_nodes.toLocaleString()}
               </p>
-              <span className="text-[10px] text-slate-500">SNAP hosts</span>
+              <span className="text-[10px] text-muted">SNAP hosts</span>
             </div>
-            <div className="bg-slate-900/60 backdrop-blur rounded-xl p-3 border border-slate-800">
-              <span className="text-xs text-slate-400">Directed Connections</span>
-              <p className="text-lg font-bold text-indigo-300 mt-0.5">
+            <div className="bg-raised p-2.5 rounded border border-border">
+              <span className="text-muted block text-[10px]">Directed Connections</span>
+              <p className="text-base font-semibold text-text mt-0.5 tabular-nums">
                 {datasetInfo.published_edges.toLocaleString()}
               </p>
-              <span className="text-[10px] text-slate-500">Raw graph edges</span>
+              <span className="text-[10px] text-muted">Raw directed edges</span>
             </div>
-            <div className="bg-slate-900/60 backdrop-blur rounded-xl p-3 border border-slate-800">
-              <span className="text-xs text-slate-400">Undirected Overlay</span>
-              <p className="text-lg font-bold text-blue-300 mt-0.5">
+            <div className="bg-raised p-2.5 rounded border border-border">
+              <span className="text-muted block text-[10px]">Undirected Overlay</span>
+              <p className="text-base font-semibold text-text mt-0.5 tabular-nums">
                 {datasetInfo.undirected_unique_edges.toLocaleString()}
               </p>
-              <span className="text-[10px] text-slate-500">Bidirectional overlay</span>
+              <span className="text-[10px] text-muted">Bidirectional overlay</span>
             </div>
-            <div className="bg-slate-900/60 backdrop-blur rounded-xl p-3 border border-slate-800">
-              <span className="text-xs text-slate-400">Largest Component</span>
-              <p className="text-lg font-bold text-emerald-400 mt-0.5">
+            <div className="bg-raised p-2.5 rounded border border-border">
+              <span className="text-muted block text-[10px]">Largest Component</span>
+              <p className="text-base font-semibold text-positive mt-0.5 tabular-nums">
                 {datasetInfo.largest_connected_component_nodes.toLocaleString()}
               </p>
-              <span className="text-[10px] text-slate-500">99.97% connected</span>
+              <span className="text-[10px] text-muted">99.97% connected</span>
             </div>
-            <div className="bg-slate-900/60 backdrop-blur rounded-xl p-3 border border-slate-800">
-              <span className="text-xs text-slate-400">Average Degree &lang;k&rang;</span>
-              <p className="text-lg font-bold text-amber-300 mt-0.5">
+            <div className="bg-raised p-2.5 rounded border border-border">
+              <span className="text-muted block text-[10px]">Average Degree &lang;k&rang;</span>
+              <p className="text-base font-semibold text-text mt-0.5 tabular-nums">
                 {datasetInfo.average_degree}
               </p>
-              <span className="text-[10px] text-slate-500">Avg connections/host</span>
+              <span className="text-[10px] text-muted">Connections / host</span>
             </div>
-            <div className="bg-slate-900/60 backdrop-blur rounded-xl p-3 border border-slate-800">
-              <span className="text-xs text-slate-400">Duplicate Edges</span>
-              <p className="text-lg font-bold text-slate-300 mt-0.5">
+            <div className="bg-raised p-2.5 rounded border border-border">
+              <span className="text-muted block text-[10px]">Duplicate Edges</span>
+              <p className="text-base font-semibold text-text mt-0.5 tabular-nums">
                 {datasetInfo.duplicate_directed_edges}
               </p>
-              <span className="text-[10px] text-emerald-400">Cleanly deduped</span>
+              <span className="text-[10px] text-positive">Verified clean</span>
             </div>
           </div>
         )}
       </div>
 
       {/* Control & Experiment Workbench */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Controls Card */}
-        <div className="lg:col-span-1 bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-1 rounded border border-border bg-surface p-4 flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                <Sliders size={18} className="text-indigo-400" />
-                MPI Experiment Configuration
+            <div className="flex items-center gap-2 pb-3 border-b border-rule mb-3.5">
+              <Sliders size={15} className="text-accent" />
+              <h3 className="text-sm font-semibold text-text">
+                MPI Experiment Parameters
               </h3>
-              <button
-                onClick={fetchDatasetAndMetrics}
-                disabled={loadingInfo}
-                className="text-slate-400 hover:text-white transition-colors"
-                title="Refresh stats"
-              >
-                <RefreshCw size={14} className={loadingInfo ? 'animate-spin' : ''} />
-              </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3.5 text-xs">
               {/* Subgraph Size */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-muted text-[11px] mb-1.5 font-medium">
                   Connected Subgraph Size (|V|)
                 </label>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-1.5">
                   {[10, 25, 50, 100].map((sz) => (
                     <button
                       key={sz}
                       type="button"
                       onClick={() => setSubgraphSize(sz)}
-                      className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
+                      className={`py-1.5 text-xs font-mono rounded border transition-colors ${
                         subgraphSize === sz
-                          ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200'
-                          : 'bg-slate-800/60 border-slate-700/80 text-slate-400 hover:bg-slate-800 hover:text-white'
+                          ? 'bg-control border-accent text-accent'
+                          : 'bg-raised border-border text-muted hover:text-text'
                       }`}
                     >
-                      {sz} Nodes
+                      {sz}
                     </button>
                   ))}
                 </div>
@@ -214,22 +206,22 @@ export const GnutellaMPISection: React.FC = () => {
 
               {/* Number of MPI Ranks */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-muted text-[11px] mb-1.5 font-medium">
                   MPI Process Ranks (p)
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   {[1, 2, 4].map((rk) => (
                     <button
                       key={rk}
                       type="button"
                       onClick={() => setNumRanks(rk)}
-                      className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
+                      className={`py-1.5 text-xs font-mono rounded border transition-colors ${
                         numRanks === rk
-                          ? 'bg-blue-600/30 border-blue-500 text-blue-200'
-                          : 'bg-slate-800/60 border-slate-700/80 text-slate-400 hover:bg-slate-800 hover:text-white'
+                          ? 'bg-control border-accent text-accent'
+                          : 'bg-raised border-border text-muted hover:text-text'
                       }`}
                     >
-                      {rk} {rk === 1 ? 'Rank (Seq)' : 'Ranks'}
+                      {rk} {rk === 1 ? 'Rank' : 'Ranks'}
                     </button>
                   ))}
                 </div>
@@ -237,20 +229,20 @@ export const GnutellaMPISection: React.FC = () => {
 
               {/* Seed */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Random Sampling Seed
+                <label className="block text-muted text-[11px] mb-1 font-medium">
+                  Random Subgraph Seed
                 </label>
                 <input
                   type="number"
                   value={seed}
                   onChange={(e) => setSeed(parseInt(e.target.value, 10) || 42)}
-                  className="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-raised border border-border rounded px-2.5 py-1.5 text-xs text-text font-mono focus:outline-none focus:border-accent"
                 />
               </div>
 
               {/* Injected Failures */}
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-muted text-[11px] mb-1 font-medium">
                   Injected Node Failures (Optional)
                 </label>
                 <input
@@ -258,19 +250,19 @@ export const GnutellaMPISection: React.FC = () => {
                   placeholder="e.g. 5040, 103"
                   value={failNodeInput}
                   onChange={(e) => setFailNodeInput(e.target.value)}
-                  className="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-raised border border-border rounded px-2.5 py-1.5 text-xs text-text placeholder-muted/60 font-mono focus:outline-none focus:border-accent"
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">
-                  Simulates non-responsive node state without aborting the MPI runtime.
+                <span className="text-[10px] text-muted mt-1 block">
+                  Simulates non-responsive nodes without aborting MPI runtime.
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-800">
+          <div className="mt-4 pt-3 border-t border-rule">
             {errorMsg && (
-              <div className="mb-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-2">
-                <AlertTriangle size={15} className="shrink-0 mt-0.5" />
+              <div className="mb-2.5 p-2 rounded bg-surface border border-negative/40 text-negative text-xs flex items-start gap-1.5">
+                <AlertTriangle size={13} className="shrink-0 mt-0.5" />
                 <span>{errorMsg}</span>
               </div>
             )}
@@ -278,17 +270,17 @@ export const GnutellaMPISection: React.FC = () => {
             <button
               onClick={handleRunMPI}
               disabled={runningExp}
-              className="w-full py-3 px-4 rounded-xl font-semibold text-sm bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-2 px-3 rounded text-xs font-semibold bg-accent hover:bg-accent/90 text-white transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {runningExp ? (
                 <>
-                  <RefreshCw size={16} className="animate-spin" />
-                  Running MPI Distributed Election...
+                  <RefreshCw size={13} className="animate-spin" />
+                  <span>Executing MPI Distributed Protocol...</span>
                 </>
               ) : (
                 <>
-                  <Play size={16} className="fill-current" />
-                  Launch MPI Distributed Election
+                  <Play size={13} className="fill-current" />
+                  <span>Launch MPI Experiment</span>
                 </>
               )}
             </button>
@@ -296,155 +288,159 @@ export const GnutellaMPISection: React.FC = () => {
         </div>
 
         {/* Live Execution Output */}
-        <div className="lg:col-span-2 bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-white flex items-center gap-2">
-              <Zap size={18} className="text-amber-400" />
-              MPI Election Live Result
-            </h3>
-            {expResult && (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/30">
-                <CheckCircle2 size={12} />
-                Converged in {expResult.rounds} Rounds
-              </span>
-            )}
-          </div>
-
-          {!expResult && !runningExp && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-slate-800 rounded-xl">
-              <Cpu size={40} className="text-slate-600 mb-3" />
-              <p className="text-slate-400 text-sm font-medium">No MPI experiment active</p>
-              <p className="text-slate-600 text-xs max-w-sm mt-1">
-                Select your subgraph parameters on the left and click &ldquo;Launch MPI Distributed Election&rdquo; to execute the topology-aware maximum-ID protocol.
-              </p>
-            </div>
-          )}
-
-          {runningExp && (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-              <RefreshCw size={36} className="text-indigo-400 animate-spin mb-3" />
-              <p className="text-indigo-300 text-sm font-medium">
-                Dispatching MPI ranks across Gnutella subgraph...
-              </p>
-              <p className="text-slate-500 text-xs mt-1">
-                Exchanging candidate proposals and synchronizing graph diameter bounds.
-              </p>
-            </div>
-          )}
-
-          {expResult && (
-            <div className="space-y-4">
-              {/* Outcome summary grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
-                  <span className="text-[11px] text-slate-400">Elected Coordinator</span>
-                  <p className="text-lg font-bold text-amber-300 mt-0.5">
-                    Node {expResult.coordinators ? expResult.coordinators.join(', ') : 'None'}
-                  </p>
-                  <span className="text-[10px] text-slate-500">Highest-ID Active Host</span>
-                </div>
-                <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
-                  <span className="text-[11px] text-slate-400">Wall-Clock Time</span>
-                  <p className="text-lg font-bold text-indigo-300 mt-0.5">
-                    {(expResult.wall_clock_time_sec * 1000).toFixed(2)} ms
-                  </p>
-                  <span className="text-[10px] text-slate-500">{expResult.wall_clock_time_sec.toFixed(4)}s total</span>
-                </div>
-                <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
-                  <span className="text-[11px] text-slate-400">MPI Messages</span>
-                  <p className="text-lg font-bold text-blue-300 mt-0.5">
-                    {expResult.total_messages.toLocaleString()}
-                  </p>
-                  <span className="text-[10px] text-slate-500">Exchanged across edges</span>
-                </div>
-                <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/60">
-                  <span className="text-[11px] text-slate-400">Graph Diameter (&Delta;)</span>
-                  <p className="text-lg font-bold text-emerald-400 mt-0.5">
-                    {expResult.graph_diameter}
-                  </p>
-                  <span className="text-[10px] text-slate-500">Upper bound for rounds</span>
-                </div>
+        <div className="lg:col-span-2 rounded border border-border bg-surface p-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-rule mb-3.5">
+              <div className="flex items-center gap-2">
+                <Zap size={15} className="text-warning" />
+                <h3 className="text-sm font-semibold text-text">
+                  MPI Convergence Result
+                </h3>
               </div>
-
-              {/* Rank to Node Assignment */}
-              <div className="bg-slate-800/40 p-4 rounded-xl border border-slate-800">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                    <Layers size={14} className="text-indigo-400" />
-                    MPI Rank-to-Host Workload Distribution
-                  </span>
-                  <span className="text-[11px] text-slate-500">
-                    {expResult.num_ranks} MPI process ranks active
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-                  {Object.entries(expResult.rank_node_distribution || {}).map(([rk, nodes]: any) => (
-                    <div
-                      key={rk}
-                      className="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800 text-xs"
-                    >
-                      <div className="font-semibold text-indigo-300 mb-1">
-                        MPI Rank {rk} ({nodes.length} hosts)
-                      </div>
-                      <div className="text-[11px] text-slate-400 truncate" title={nodes.join(', ')}>
-                        Nodes: {nodes.slice(0, 6).join(', ')}
-                        {nodes.length > 6 ? '...' : ''}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Event preview */}
-              {expResult.events && expResult.events.length > 0 && (
-                <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 font-mono text-[11px] max-h-36 overflow-y-auto space-y-1">
-                  <div className="text-slate-500 text-[10px] uppercase font-bold sticky top-0 bg-slate-950/90 py-0.5">
-                    Recent MPI Engine Trace
-                  </div>
-                  {expResult.events.slice(-6).map((ev: any, idx: number) => (
-                    <div key={idx} className="text-slate-300 flex items-center gap-2">
-                      <span className="text-indigo-400">[{ev.type}]</span>
-                      <span>{ev.description}</span>
-                    </div>
-                  ))}
-                </div>
+              {expResult && (
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-positive bg-control px-2 py-0.5 rounded border border-positive/30">
+                  <CheckCircle2 size={11} />
+                  <span>Converged in {expResult.max_rounds} Rounds</span>
+                </span>
               )}
             </div>
-          )}
+
+            {!expResult && !runningExp && (
+              <div className="py-12 flex flex-col items-center justify-center text-center">
+                <Cpu size={32} className="text-muted/40 mb-2" />
+                <p className="text-text text-xs font-medium">Ready to execute</p>
+                <p className="text-muted text-[11px] max-w-sm mt-1">
+                  Configure subgraph parameters and click &ldquo;Launch MPI Experiment&rdquo; to evaluate distributed rounds and message counts.
+                </p>
+              </div>
+            )}
+
+            {runningExp && (
+              <div className="py-12 flex flex-col items-center justify-center text-center">
+                <RefreshCw size={28} className="text-accent animate-spin mb-2" />
+                <p className="text-text text-xs font-medium">
+                  Dispatching MPI ranks across Gnutella subgraph...
+                </p>
+                <p className="text-muted text-[11px] mt-1">
+                  Exchanging candidate proposals and synchronizing graph diameter bounds.
+                </p>
+              </div>
+            )}
+
+            {expResult && (
+              <div className="space-y-3">
+                {/* Outcome summary grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="bg-raised p-2.5 rounded border border-border">
+                    <span className="text-muted block text-[10px]">Elected Leader</span>
+                    <p className="text-base font-semibold text-positive mt-0.5 tabular-nums">
+                      Node {expResult.coordinators_elected ? expResult.coordinators_elected.join(', ') : 'None'}
+                    </p>
+                    <span className="text-[10px] text-muted">Max-ID active host</span>
+                  </div>
+                  <div className="bg-raised p-2.5 rounded border border-border">
+                    <span className="text-muted block text-[10px]">Wall-Clock Time</span>
+                    <p className="text-base font-semibold text-text mt-0.5 tabular-nums">
+                      {(expResult.wall_clock_time * 1000).toFixed(2)} ms
+                    </p>
+                    <span className="text-[10px] text-muted">{expResult.wall_clock_time.toFixed(4)}s total</span>
+                  </div>
+                  <div className="bg-raised p-2.5 rounded border border-border">
+                    <span className="text-muted block text-[10px]">MPI Messages</span>
+                    <p className="text-base font-semibold text-text mt-0.5 tabular-nums">
+                      {expResult.total_messages.toLocaleString()}
+                    </p>
+                    <span className="text-[10px] text-muted">Exchanged across edges</span>
+                  </div>
+                  <div className="bg-raised p-2.5 rounded border border-border">
+                    <span className="text-muted block text-[10px]">Graph Diameter (&Delta;)</span>
+                    <p className="text-base font-semibold text-warning mt-0.5 tabular-nums">
+                      {expResult.diameter}
+                    </p>
+                    <span className="text-[10px] text-muted">Round upper bound</span>
+                  </div>
+                </div>
+
+                {/* Rank to Node Assignment */}
+                <div className="bg-raised p-3 rounded border border-border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-text flex items-center gap-1.5">
+                      <Layers size={13} className="text-accent" />
+                      MPI Rank-to-Host Assignment
+                    </span>
+                    <span className="text-[11px] text-muted font-mono tabular-nums">
+                      {expResult.num_ranks} MPI ranks
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-1.5 text-xs">
+                    {Object.entries(expResult.rank_node_distribution || {}).map(([rk, nodes]: any) => (
+                      <div
+                        key={rk}
+                        className="bg-surface p-2 rounded border border-border text-[11px]"
+                      >
+                        <div className="font-semibold text-text mb-0.5 font-mono">
+                          Rank {rk} ({nodes.length} hosts)
+                        </div>
+                        <div className="text-[10px] text-muted font-mono truncate" title={nodes.join(', ')}>
+                          {nodes.slice(0, 6).join(', ')}
+                          {nodes.length > 6 ? '...' : ''}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Engine trace snippet */}
+                {expResult.events && expResult.events.length > 0 && (
+                  <div className="bg-ground p-2.5 rounded border border-border font-mono text-[10px] max-h-32 overflow-y-auto space-y-1">
+                    <div className="text-muted text-[10px] sticky top-0 bg-ground py-0.5 font-semibold">
+                      Recent MPI Trace Events:
+                    </div>
+                    {expResult.events.slice(-5).map((ev: any, idx: number) => (
+                      <div key={idx} className="text-text flex items-center gap-1.5">
+                        <span className="text-accent">[{ev.type}]</span>
+                        <span className="text-muted">{ev.description}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Laboratory Benchmark Suite & Charts */}
-      <div className="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="rounded border border-border bg-surface p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <div>
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <BarChart3 size={20} className="text-indigo-400" />
-              Empirical Performance Evaluation & Benchmark Suite
+            <h3 className="text-sm font-semibold text-text flex items-center gap-2">
+              <BarChart3 size={15} className="text-accent" />
+              Empirical Performance Evaluation & Scaling Suite
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Real measurements collected across 12 full experimental configurations (1, 2, and 4 MPI ranks for 10, 25, 50, and 100 Gnutella nodes).
+            <p className="text-xs text-muted mt-0.5">
+              Measurements across 12 full experimental configurations (1, 2, and 4 MPI ranks for 10, 25, 50, and 100 Gnutella nodes).
             </p>
           </div>
           <a
             href="/plots/speedup_and_efficiency.png"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300 hover:text-white border border-slate-700 shrink-0"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-control text-xs text-muted hover:text-text border border-border transition-colors"
           >
-            <Download size={13} />
-            High-Res Plots
+            <Download size={12} />
+            <span>High-Res Plots</span>
           </a>
         </div>
 
         {/* 3 Matplotlib Plots Display */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-slate-950/70 rounded-xl p-3 border border-slate-800 hover:border-slate-700 transition-all flex flex-col">
-            <span className="text-xs font-semibold text-slate-300 mb-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+          <div className="bg-raised rounded p-2.5 border border-border flex flex-col">
+            <span className="text-xs font-semibold text-text mb-1.5">
               Execution Runtime vs Graph Size
             </span>
-            <div className="rounded-lg overflow-hidden bg-white/5 p-1 flex-1 flex items-center justify-center">
+            <div className="rounded overflow-hidden bg-ground p-1 flex-1 flex items-center justify-center">
               <img
                 src="/plots/runtime_vs_graph_size.png"
                 alt="Runtime vs Graph Size"
@@ -454,16 +450,16 @@ export const GnutellaMPISection: React.FC = () => {
                 }}
               />
             </div>
-            <span className="text-[10px] text-slate-500 mt-2">
-              Measures wall-clock convergence time across varying ranks.
+            <span className="text-[10px] text-muted mt-1.5">
+              Wall-clock convergence time across varying ranks.
             </span>
           </div>
 
-          <div className="bg-slate-950/70 rounded-xl p-3 border border-slate-800 hover:border-slate-700 transition-all flex flex-col">
-            <span className="text-xs font-semibold text-slate-300 mb-2">
+          <div className="bg-raised rounded p-2.5 border border-border flex flex-col">
+            <span className="text-xs font-semibold text-text mb-1.5">
               MPI Message Overhead vs Graph Size
             </span>
-            <div className="rounded-lg overflow-hidden bg-white/5 p-1 flex-1 flex items-center justify-center">
+            <div className="rounded overflow-hidden bg-ground p-1 flex-1 flex items-center justify-center">
               <img
                 src="/plots/message_count_vs_size.png"
                 alt="Message Count vs Graph Size"
@@ -473,16 +469,16 @@ export const GnutellaMPISection: React.FC = () => {
                 }}
               />
             </div>
-            <span className="text-[10px] text-slate-500 mt-2">
-              Demonstrates message complexity bounding based on overlay edges.
+            <span className="text-[10px] text-muted mt-1.5">
+              Message complexity bounded by communication graph edges.
             </span>
           </div>
 
-          <div className="bg-slate-950/70 rounded-xl p-3 border border-slate-800 hover:border-slate-700 transition-all flex flex-col">
-            <span className="text-xs font-semibold text-slate-300 mb-2">
+          <div className="bg-raised rounded p-2.5 border border-border flex flex-col">
+            <span className="text-xs font-semibold text-text mb-1.5">
               Speedup S(p) & Parallel Efficiency E(p)
             </span>
-            <div className="rounded-lg overflow-hidden bg-white/5 p-1 flex-1 flex items-center justify-center">
+            <div className="rounded overflow-hidden bg-ground p-1 flex-1 flex items-center justify-center">
               <img
                 src="/plots/speedup_and_efficiency.png"
                 alt="Speedup and Parallel Efficiency"
@@ -492,41 +488,41 @@ export const GnutellaMPISection: React.FC = () => {
                 }}
               />
             </div>
-            <span className="text-[10px] text-slate-500 mt-2">
-              Confirms communication-bound nature of distributed graph consensus.
+            <span className="text-[10px] text-muted mt-1.5">
+              Characterizes communication-to-computation trade-off.
             </span>
           </div>
         </div>
 
         {/* Benchmarks Summary Table */}
         {metrics.length > 0 && (
-          <div className="overflow-x-auto rounded-xl border border-slate-800">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950/90 text-[11px] text-slate-400 uppercase tracking-wider border-b border-slate-800">
+          <div className="overflow-x-auto rounded border border-border">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-raised text-[11px] text-muted font-medium border-b border-rule">
                 <tr>
-                  <th className="py-3 px-4">Graph Size (|V|)</th>
-                  <th className="py-3 px-4">MPI Ranks (p)</th>
-                  <th className="py-3 px-4">Wall-Clock (s)</th>
-                  <th className="py-3 px-4">Total Messages</th>
-                  <th className="py-3 px-4">Rounds</th>
-                  <th className="py-3 px-4">Diameter (&Delta;)</th>
-                  <th className="py-3 px-4">Speedup S(p)</th>
-                  <th className="py-3 px-4">Efficiency E(p)</th>
-                  <th className="py-3 px-4">Coordinator</th>
+                  <th className="py-2 px-3">Graph size (|V|)</th>
+                  <th className="py-2 px-3">MPI ranks (p)</th>
+                  <th className="py-2 px-3 text-right">Wall-clock (s)</th>
+                  <th className="py-2 px-3 text-right">Messages</th>
+                  <th className="py-2 px-3 text-right">Rounds</th>
+                  <th className="py-2 px-3 text-right">Diameter (&Delta;)</th>
+                  <th className="py-2 px-3 text-right">Speedup S(p)</th>
+                  <th className="py-2 px-3 text-right">Efficiency E(p)</th>
+                  <th className="py-2 px-3">Coordinator</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
+              <tbody className="divide-y divide-rule font-mono text-[11px]">
                 {metrics.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="py-2.5 px-4 font-semibold text-white">{row.GraphSize} nodes</td>
-                    <td className="py-2.5 px-4 text-indigo-300">{row.MPIRanks}</td>
-                    <td className="py-2.5 px-4 text-slate-200">{Number(row.WallClockSec).toFixed(4)}s</td>
-                    <td className="py-2.5 px-4 text-blue-300">{Number(row.TotalMessages).toLocaleString()}</td>
-                    <td className="py-2.5 px-4">{row.Rounds}</td>
-                    <td className="py-2.5 px-4">{row.Diameter}</td>
-                    <td className="py-2.5 px-4 text-amber-300">{Number(row.Speedup).toFixed(3)}x</td>
-                    <td className="py-2.5 px-4 text-emerald-400">{(Number(row.Efficiency) * 100).toFixed(1)}%</td>
-                    <td className="py-2.5 px-4 text-slate-400">{row.Coordinators}</td>
+                  <tr key={idx} className="hover:bg-raised transition-colors">
+                    <td className="py-2 px-3 font-semibold text-text tabular-nums">{row.GraphSize} nodes</td>
+                    <td className="py-2 px-3 text-accent tabular-nums">{row.MPIRanks}</td>
+                    <td className="py-2 px-3 text-right text-text tabular-nums">{Number(row.WallClockSec).toFixed(4)}s</td>
+                    <td className="py-2 px-3 text-right text-muted tabular-nums">{Number(row.TotalMessages).toLocaleString()}</td>
+                    <td className="py-2 px-3 text-right tabular-nums">{row.Rounds}</td>
+                    <td className="py-2 px-3 text-right tabular-nums">{row.Diameter}</td>
+                    <td className="py-2 px-3 text-right text-warning tabular-nums">{Number(row.Speedup).toFixed(3)}x</td>
+                    <td className="py-2 px-3 text-right text-positive tabular-nums">{(Number(row.Efficiency) * 100).toFixed(1)}%</td>
+                    <td className="py-2 px-3 text-muted tabular-nums">{row.Coordinators}</td>
                   </tr>
                 ))}
               </tbody>

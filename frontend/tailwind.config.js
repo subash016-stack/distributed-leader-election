@@ -7,17 +7,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#0B0F19',
-        card: '#111827',
-        border: '#1F2937',
-        accent: '#3B82F6',
-        success: '#10B981',
-        warning: '#F59E0B',
-        danger: '#EF4444',
+        background: '#0e0e11',
+        card: '#141418',
+        surface: '#141418',
+        raised: '#1c1c22',
+        border: '#24242c',
+        rule: '#1c1c22',
+        control: '#2b2b34',
+        accent: '#4a8ad6',
+        positive: '#44a282',
+        negative: '#e5566f',
+        warning: '#d9a441',
+        muted: '#8a8c95',
       },
-      animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      }
     },
   },
   plugins: [],

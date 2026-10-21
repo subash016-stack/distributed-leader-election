@@ -9,12 +9,29 @@ export default defineConfig({
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://localhost:8000',
+        target: 'ws://127.0.0.1:8000',
         ws: true,
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('error', (err: any) => {
+            // Silently ignore normal client disconnects (EPIPE/ECONNRESET) during HMR or tab reloads
+            if (err.code === 'EPIPE' || err.code === 'ECONNRESET') {
+              return;
+            }
+          });
+        },
+      },
+      '/plots': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/reports': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
       },
     },
   },

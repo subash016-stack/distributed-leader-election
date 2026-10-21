@@ -18,46 +18,46 @@ export const ElectionTimeline: React.FC<Props> = ({ events, onClear }) => {
     return true;
   });
 
-  const getEventBadge = (type: string) => {
+  const getEventBadgeClass = (type: string) => {
     if (type.includes('COORDINATOR')) {
-      return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+      return 'bg-control text-positive border border-positive/30';
     }
     if (type.includes('ELECTION')) {
-      return 'bg-amber-500/20 text-amber-400 border-amber-500/40';
+      return 'bg-control text-warning border border-warning/30';
     }
     if (type.includes('OK')) {
-      return 'bg-blue-500/20 text-blue-400 border-blue-500/40';
+      return 'bg-control text-accent border border-accent/30';
     }
     if (type.includes('FAILED') || type.includes('TIMEOUT')) {
-      return 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+      return 'bg-control text-negative border border-negative/30';
     }
-    return 'bg-slate-800 text-slate-300 border-slate-700';
+    return 'bg-raised text-muted border border-border';
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-xl backdrop-blur flex flex-col h-[480px]">
-      <div className="flex items-center justify-between pb-3 border-b border-border/60">
+    <div className="rounded border border-border bg-surface p-4 flex flex-col h-[460px]">
+      <div className="flex items-center justify-between pb-3 border-b border-rule">
         <div className="flex items-center gap-2">
-          <Activity size={18} className="text-amber-400" />
-          <h2 className="text-base font-bold text-slate-100">
-            Real-Time Election Event Timeline
+          <Activity size={15} className="text-warning" />
+          <h2 className="text-sm font-semibold text-text">
+            Event Stream
           </h2>
-          <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-[11px] font-mono text-slate-400">
-            {events.length} events
+          <span className="px-1.5 py-0.2 rounded bg-raised border border-border text-[11px] font-mono text-muted tabular-nums">
+            {events.length}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Filters */}
-          <div className="flex rounded-lg bg-slate-900 p-0.5 border border-slate-800 text-xs">
+          <div className="flex rounded bg-raised p-0.5 border border-border text-xs">
             {(['ALL', 'ELECTION', 'COORDINATOR', 'FAILURE'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setFilter(tab)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition ${
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
                   filter === tab
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-control text-text border border-border'
+                    : 'text-muted hover:text-text'
                 }`}
               >
                 {tab}
@@ -67,19 +67,19 @@ export const ElectionTimeline: React.FC<Props> = ({ events, onClear }) => {
 
           <button
             onClick={onClear}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
+            className="p-1 rounded text-muted hover:text-negative hover:bg-raised transition-colors"
             title="Clear event history"
           >
-            <Trash2 size={15} />
+            <Trash2 size={14} />
           </button>
         </div>
       </div>
 
       {/* Events Scroll Area */}
-      <div className="flex-1 overflow-y-auto mt-3 pr-1 space-y-2.5">
+      <div className="flex-1 overflow-y-auto mt-2.5 pr-1 space-y-1.5 font-mono text-[11px]">
         {filteredEvents.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-xs text-slate-500">
-            No events logged yet. Start the simulation to begin.
+          <div className="h-full flex items-center justify-center text-xs text-muted font-sans">
+            No events recorded for current filter.
           </div>
         ) : (
           filteredEvents.map((evt) => {
@@ -87,49 +87,40 @@ export const ElectionTimeline: React.FC<Props> = ({ events, onClear }) => {
               hour: '2-digit',
               minute: '2-digit',
               second: '2-digit',
-              hour12: false,
             });
 
             return (
               <div
                 key={evt.id}
-                className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 hover:border-slate-700 transition flex flex-col gap-1.5"
+                className="p-2 rounded bg-raised border border-border flex items-start justify-between gap-2"
               >
-                <div className="flex items-center justify-between text-[11px]">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-slate-400">{timeStr}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded-md border text-[10px] font-mono font-semibold uppercase ${getEventBadge(
-                        evt.event_type
-                      )}`}
-                    >
-                      {evt.event_type.replace(/_/g, ' ')}
-                    </span>
-                    {evt.generation > 0 && (
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        Gen #{evt.generation}
-                      </span>
-                    )}
-                  </div>
-
-                  {evt.sender_id && (
-                    <div className="flex items-center gap-1 font-mono text-[11px] text-slate-400">
-                      <span className="text-blue-400 font-semibold">Node {evt.sender_id}</span>
-                      {evt.receiver_id ? (
-                        <>
-                          <ArrowRight size={11} className="text-slate-600" />
-                          <span className="text-emerald-400 font-semibold">Node {evt.receiver_id}</span>
-                        </>
-                      ) : (
-                        <span className="text-slate-500">(Broadcast)</span>
-                      )}
-                    </div>
-                  )}
+                <div className="flex items-center gap-2">
+                  <span className="text-muted tabular-nums text-[10px] shrink-0">
+                    {timeStr}
+                  </span>
+                  <span
+                    className={`px-1.5 py-0.2 rounded text-[10px] shrink-0 ${getEventBadgeClass(
+                      evt.event_type
+                    )}`}
+                  >
+                    {evt.event_type}
+                  </span>
+                  <span className="text-text font-sans text-xs">
+                    {evt.description}
+                  </span>
                 </div>
 
-                <p className="text-xs text-slate-300 font-normal leading-relaxed">
-                  {evt.description}
-                </p>
+                <div className="flex items-center gap-1.5 text-muted text-[10px] shrink-0">
+                  {evt.sender_id !== null && (
+                    <span className="tabular-nums">H:{evt.sender_id}</span>
+                  )}
+                  {evt.receiver_id !== null && (
+                    <>
+                      <ArrowRight size={10} className="text-muted/60" />
+                      <span className="tabular-nums">H:{evt.receiver_id}</span>
+                    </>
+                  )}
+                </div>
               </div>
             );
           })

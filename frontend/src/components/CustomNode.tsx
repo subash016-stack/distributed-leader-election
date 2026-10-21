@@ -13,59 +13,39 @@ export const CustomNode = memo((props: NodeProps) => {
   const { nodeInfo, isSelected } = data;
   const { id, status, is_coordinator, port } = nodeInfo;
 
-  let borderColor = 'border-slate-700';
-  let bgColor = 'bg-slate-900/90';
-  let glowColor = '';
-  let textColor = 'text-slate-300';
-  let badgeBg = 'bg-slate-800 text-slate-400';
+  let borderColor = 'border-border';
+  let badgeClass = 'text-muted bg-raised';
   let Icon = Server;
+  let statusText: string = status;
 
   if (status === 'FAILED') {
-    // Red: failed node
-    borderColor = 'border-rose-500/80';
-    bgColor = 'bg-rose-950/70';
-    glowColor = 'shadow-[0_0_15px_rgba(244,63,94,0.35)]';
-    textColor = 'text-rose-200';
-    badgeBg = 'bg-rose-500/20 text-rose-300';
+    borderColor = 'border-negative';
+    badgeClass = 'text-negative bg-control';
     Icon = AlertOctagon;
   } else if (status === 'ELECTION') {
-    // Amber: election in progress
-    borderColor = 'border-amber-500/80';
-    bgColor = 'bg-amber-950/70';
-    glowColor = 'shadow-[0_0_20px_rgba(245,158,11,0.4)] animate-pulse';
-    textColor = 'text-amber-200';
-    badgeBg = 'bg-amber-500/20 text-amber-300';
+    borderColor = 'border-warning';
+    badgeClass = 'text-warning bg-control';
     Icon = RefreshCw;
   } else if (is_coordinator && status === 'ALIVE') {
-    // Green: active coordinator
-    borderColor = 'border-emerald-500';
-    bgColor = 'bg-emerald-950/80';
-    glowColor = 'shadow-[0_0_25px_rgba(16,185,129,0.45)] ring-2 ring-emerald-400/50';
-    textColor = 'text-emerald-100';
-    badgeBg = 'bg-emerald-500/30 text-emerald-300 font-bold';
+    borderColor = 'border-positive';
+    badgeClass = 'text-positive bg-control font-semibold';
     Icon = Crown;
+    statusText = 'COORDINATOR';
   } else if (status === 'ALIVE') {
-    // Blue: active non-coordinator
-    borderColor = 'border-blue-500/60';
-    bgColor = 'bg-blue-950/70';
-    glowColor = 'shadow-[0_0_15px_rgba(59,130,246,0.25)]';
-    textColor = 'text-blue-100';
-    badgeBg = 'bg-blue-500/20 text-blue-300';
+    borderColor = isSelected ? 'border-accent' : 'border-border';
+    badgeClass = 'text-accent bg-control';
     Icon = Server;
   } else {
-    // Gray: offline
-    borderColor = 'border-slate-800';
-    bgColor = 'bg-slate-900/60';
-    textColor = 'text-slate-500';
-    badgeBg = 'bg-slate-800 text-slate-500';
+    borderColor = 'border-border';
+    badgeClass = 'text-muted bg-raised';
     Icon = PowerOff;
   }
 
-  const selectedRing = isSelected ? 'ring-2 ring-white ring-offset-2 ring-offset-background' : '';
+  const selectionOutline = isSelected ? 'ring-1 ring-accent' : '';
 
   return (
     <div
-      className={`relative min-w-[170px] rounded-2xl border-2 ${borderColor} ${bgColor} ${glowColor} ${selectedRing} p-3.5 backdrop-blur-md transition-all duration-300 hover:scale-105 cursor-pointer shadow-xl`}
+      className={`relative min-w-[160px] rounded border ${borderColor} ${selectionOutline} bg-surface p-3 cursor-pointer transition-colors`}
     >
       {/* Hidden Handles for React Flow Edge Connections */}
       <Handle type="target" position={Position.Top} className="!opacity-0" />
@@ -76,14 +56,14 @@ export const CustomNode = memo((props: NodeProps) => {
       {/* Top row: Icon and Node ID */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <div className={`p-1.5 rounded-lg ${badgeBg}`}>
-            <Icon size={18} className={status === 'ELECTION' ? 'animate-spin' : ''} />
+          <div className="p-1.5 rounded bg-control text-text">
+            <Icon size={15} />
           </div>
           <div>
-            <div className={`text-base font-bold tracking-tight ${textColor}`}>
-              Node {id}
+            <div className="text-sm font-semibold tracking-tight text-text tabular-nums">
+              Host {id}
             </div>
-            <div className="text-[11px] font-mono text-slate-400">
+            <div className="text-[11px] font-mono text-muted tabular-nums">
               :{port}
             </div>
           </div>
@@ -91,12 +71,12 @@ export const CustomNode = memo((props: NodeProps) => {
       </div>
 
       {/* Bottom row: status pill and coordinator view */}
-      <div className="mt-3 pt-2.5 border-t border-slate-700/50 flex items-center justify-between text-[11px]">
-        <span className={`px-2 py-0.5 rounded-full uppercase tracking-wider text-[10px] font-semibold ${badgeBg}`}>
-          {is_coordinator && status === 'ALIVE' ? 'COORDINATOR' : status}
+      <div className="mt-2.5 pt-2 border-t border-rule flex items-center justify-between text-[11px]">
+        <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono uppercase ${badgeClass}`}>
+          {statusText}
         </span>
-        <span className="text-slate-400 font-mono text-[10px]">
-          {nodeInfo.current_coordinator ? `Coord: ${nodeInfo.current_coordinator}` : 'Coord: -'}
+        <span className="text-muted font-mono text-[10px] tabular-nums">
+          {nodeInfo.current_coordinator ? `C:${nodeInfo.current_coordinator}` : 'C:-'}
         </span>
       </div>
     </div>

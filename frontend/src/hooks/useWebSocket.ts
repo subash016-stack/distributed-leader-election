@@ -6,8 +6,18 @@ export function useWebSocket(onEvent?: (event: SystemEvent) => void) {
   const [latestEvent, setLatestEvent] = useState<SystemEvent | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number>();
+  const isUnmountedRef = useRef(false);
+
+  // Store onEvent callback in ref so connect() doesn't re-create and reconnect on every render
+  const onEventRef = useRef(onEvent);
+  useEffect(() => {
+    onEventRef.current = onEvent;
+  }, [onEvent]);
 
   const connect = useCallback(() => {
+    if (isUnmountedRef.current) return;
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
 
@@ -15,47 +25,66 @@ export function useWebSocket(onEvent?: (event: SystemEvent) => void) {
       const socket = new WebSocket(wsUrl);
 
       socket.onopen = () => {
-        setIsConnected(true);
+        if (!isUnmountedRef.current) {
+          setIsConnected(true);
+        }
       };
 
       socket.onmessage = (event) => {
         try {
           const data: SystemEvent = JSON.parse(event.data);
           setLatestEvent(data);
-          if (onEvent) {
-            onEvent(data);
+          if (onEventRef.current) {
+            onEventRef.current(data);
           }
         } catch {
-          // Non-JSON ping/pong or system notice
+          // Non-JSON ping/pong
         }
       };
 
       socket.onclose = () => {
-        setIsConnected(false);
-        // Attempt reconnect after 2 seconds
-        reconnectTimeoutRef.current = window.setTimeout(() => {
-          connect();
-        }, 2000);
+        if (!isUnmountedRef.current) {
+          setIsConnected(false);
+          // Attempt reconnect after 2.5 seconds
+          if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = window.setTimeout(() => {
+            connect();
+          }, 2500);
+        }
       };
 
       socket.onerror = () => {
-        socket.close();
+        // Will trigger onclose automatically
+        try {
+          socket.close();
+        } catch {
+          // ignore
+        }
       };
 
       wsRef.current = socket;
     } catch {
-      reconnectTimeoutRef.current = window.setTimeout(connect, 3000);
+      if (!isUnmountedRef.current) {
+        if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = window.setTimeout(connect, 3000);
+      }
     }
-  }, [onEvent]);
+  }, []);
 
   useEffect(() => {
+    isUnmountedRef.current = false;
     connect();
+
     return () => {
+      isUnmountedRef.current = true;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
       if (wsRef.current) {
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
         wsRef.current.close();
+        wsRef.current = null;
       }
     };
   }, [connect]);

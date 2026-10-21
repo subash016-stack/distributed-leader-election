@@ -25,12 +25,12 @@ export const Dashboard: React.FC = () => {
     wsConnected,
     isLoading,
     actionError,
-    startSimulation,
-    stopSimulation,
     resetSimulation,
     failNode,
     restartNode,
     triggerElection,
+    crashCoordinatorAndElect,
+    restartAllNodes,
     clearEvents,
   } = useSimulation();
 
@@ -41,33 +41,36 @@ export const Dashboard: React.FC = () => {
       activeNodesCount={topology?.active_nodes ?? 0}
       totalNodesCount={topology?.total_nodes ?? 5}
     >
-      {/* Navigation Tabs */}
-      <div className="flex items-center gap-3 mb-6 border-b border-slate-800 pb-3">
+      {/* Workbench Mode Tabs (Data-Terminal Underline / Segment) */}
+      <div className="flex items-center gap-1 mb-5 border-b border-border pb-px">
         <button
           onClick={() => setActiveTab('mpi')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-medium border-b-2 transition-colors ${
             activeTab === 'mpi'
-              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-600/30'
-              : 'bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+              ? 'border-accent text-text'
+              : 'border-transparent text-muted hover:text-text'
           }`}
         >
-          <Database size={16} />
+          <Database size={14} className={activeTab === 'mpi' ? 'text-accent' : 'text-muted'} />
           <span>Stanford SNAP Gnutella & MPI Engine</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white font-bold ml-1">
-            LAB FOCUS
+          <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-control text-muted ml-0.5">
+            P2P Graph
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab('bully')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all ${
+          className={`flex items-center gap-2 px-3.5 py-2 text-xs font-medium border-b-2 transition-colors ${
             activeTab === 'bully'
-              ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-600/30'
-              : 'bg-slate-900/60 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+              ? 'border-accent text-text'
+              : 'border-transparent text-muted hover:text-text'
           }`}
         >
-          <Network size={16} />
-          <span>Interactive TCP Bully Cluster</span>
+          <Network size={14} className={activeTab === 'bully' ? 'text-accent' : 'text-muted'} />
+          <span>Live TCP Bully Cluster</span>
+          <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-control text-muted ml-0.5">
+            5 Processes
+          </span>
         </button>
       </div>
 
@@ -75,66 +78,60 @@ export const Dashboard: React.FC = () => {
         <GnutellaMPISection />
       ) : (
         <>
-          {/* Overview Cards displaying the 4 mandatory outputs */}
+          {/* Overview Metric Tiles */}
           <OverviewCards
             topology={topology}
             history={history}
             isElectionInProgress={status?.election_in_progress ?? false}
           />
 
-      {/* Main Grid: Interactive Network Graph & Inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Network Graph (2 cols) */}
-        <div className="lg:col-span-2 flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold text-slate-300">
-              Interactive Network Topology (React Flow)
-            </h2>
-            <span className="text-xs text-slate-500">
-              Click any node to inspect TCP socket & process
-            </span>
-          </div>
-          <NetworkGraph
+          {/* Streamlined Lifecycle Toolbar */}
+          <SimulationControls
             topology={topology}
-            selectedNodeId={selectedNodeId}
-            onSelectNode={setSelectedNodeId}
-          />
-        </div>
-
-        {/* Node Inspector (1 col) */}
-        <div className="lg:col-span-1">
-          <NodeInspector
-            nodeInfo={selectedNodeInfo}
-            onClose={() => setSelectedNodeId(null)}
-            onFail={failNode}
-            onRestart={restartNode}
+            isRunning={status?.is_running ?? false}
+            isLoading={isLoading}
+            actionError={actionError}
+            onReset={resetSimulation}
             onTriggerElection={triggerElection}
+            onCrashCoordinator={crashCoordinatorAndElect}
+            onRecoverAll={restartAllNodes}
           />
-        </div>
-      </div>
 
-      {/* Simulation Controls */}
-      <div className="mb-6">
-        <SimulationControls
-          topology={topology}
-          isRunning={status?.is_running ?? false}
-          isLoading={isLoading}
-          actionError={actionError}
-          onStart={startSimulation}
-          onStop={stopSimulation}
-          onReset={resetSimulation}
-          onFailNode={failNode}
-          onRestartNode={restartNode}
-          onTriggerElection={triggerElection}
-        />
-      </div>
+          {/* Interactive Topology Graph & Node Inspector */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+            <div className="lg:col-span-2 flex flex-col">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-semibold text-text">
+                  Overlay Network Topology (TCP Sockets)
+                </h3>
+                <span className="text-[11px] text-muted">
+                  Click any host node to inspect or simulate crashes
+                </span>
+              </div>
+              <NetworkGraph
+                topology={topology}
+                selectedNodeId={selectedNodeId}
+                onSelectNode={setSelectedNodeId}
+              />
+            </div>
 
-        {/* Bottom Grid: Real-time Timeline and Coordinator History */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ElectionTimeline events={events} onClear={clearEvents} />
-          <CoordinatorHistory history={history} />
-        </div>
-      </>
+            <div className="lg:col-span-1">
+              <NodeInspector
+                nodeInfo={selectedNodeInfo}
+                onClose={() => setSelectedNodeId(null)}
+                onFail={failNode}
+                onRestart={restartNode}
+                onTriggerElection={triggerElection}
+              />
+            </div>
+          </div>
+
+          {/* Bottom Grid: Real-time Timeline and Coordinator History */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <ElectionTimeline events={events} onClear={clearEvents} />
+            <CoordinatorHistory history={history} />
+          </div>
+        </>
       )}
     </DashboardLayout>
   );

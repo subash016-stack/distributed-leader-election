@@ -55,3 +55,8 @@ htmlcov/
 dataset/raw/*.txt.gz
 dataset/raw/*.txt
 !dataset/raw/.gitkeep
+
+# Taste skill working cache
+.taste-skill/
+frontend/.taste-skill/
+

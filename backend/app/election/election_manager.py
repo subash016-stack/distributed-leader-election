@@ -24,6 +24,15 @@ class ElectionManager:
         election_id: Optional[str],
         generation: int,
     ) -> CoordinatorRecord:
+        # Deduplicate: avoid logging the same transition multiple times when all peers acknowledge it
+        if self.history:
+            last = self.history[-1]
+            if last.new_coordinator == new_coordinator and (
+                (election_id and last.election_id == election_id)
+                or (last.generation == generation and last.previous_coordinator == previous_coordinator)
+            ):
+                return last
+
         record = CoordinatorRecord(
             previous_coordinator=previous_coordinator,
             new_coordinator=new_coordinator,
